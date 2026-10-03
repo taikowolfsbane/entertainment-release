@@ -201,6 +201,10 @@ class EntertainmentCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     CONF_THEATRICAL_EXCLUDE_RERELEASES,
                     DEFAULT_THEATRICAL_EXCLUDE_RERELEASES,
                 ),
+                "sort_by_release_date": self.options.get(
+                    CONF_THEATRICAL_SORT_BY_RELEASE_DATE,
+                    DEFAULT_THEATRICAL_SORT_BY_RELEASE_DATE,
+                ),
             }
         return {
             "country": self.options.get(CONF_DIGITAL_COUNTRY, DEFAULT_DIGITAL_COUNTRY),
@@ -222,6 +226,11 @@ class EntertainmentCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     ) -> list[dict[str, Any]]:
         values = self._movie_filter_values(category)
 
+        sort_by_release_date = (
+            category == "theatrical"
+            and bool(values.get("sort_by_release_date"))
+        )
+
         params: dict[str, Any] = {
             "include_adult": "false",
             "include_video": "false",
@@ -229,7 +238,11 @@ class EntertainmentCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "region": values["country"],
             "release_date.gte": start,
             "release_date.lte": end,
-            "sort_by": "popularity.desc",
+            "sort_by": (
+                "release_date.asc"
+                if sort_by_release_date
+                else "popularity.desc"
+            ),
         }
 
         release_types = [str(v) for v in values["release_types"]]
@@ -285,9 +298,19 @@ class EntertainmentCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                         merged[int(movie_id)] = item
 
             results = list(merged.values())
-            results.sort(
-                key=lambda item: -float(item.get("popularity") or 0)
-            )
+            if sort_by_release_date:
+                results.sort(
+                    key=lambda item: (
+                        item.get("release_date") or "9999-12-31",
+                        -float(item.get("popularity") or 0),
+                    )
+                )
+            else:
+                results.sort(
+                    key=lambda item: -float(
+                        item.get("popularity") or 0
+                    )
+                )
         else:
             results = await self._request_all_pages(
                 "/discover/movie",
@@ -300,7 +323,7 @@ class EntertainmentCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         ):
             # TMDB can return an older title because a new regional theatrical
             # event matches the Discover query. When enabled, keep only movies
-            # whose main TMDB release_date itself falls inside this configured
+            # whose returned TMDB release_date falls inside this configured
             # date window. This intentionally removes re-releases.
             results = [
                 item
@@ -308,6 +331,21 @@ class EntertainmentCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 if item.get("release_date")
                 and start <= item["release_date"] <= end
             ]
+
+        if category == "theatrical":
+            if sort_by_release_date:
+                results.sort(
+                    key=lambda item: (
+                        item.get("release_date") or "9999-12-31",
+                        -float(item.get("popularity") or 0),
+                    )
+                )
+            else:
+                results.sort(
+                    key=lambda item: -float(
+                        item.get("popularity") or 0
+                    )
+                )
 
         return [
             {

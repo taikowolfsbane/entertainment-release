@@ -143,6 +143,13 @@ class EntertainmentReleasesOptionsFlow(OptionsFlowWithReload):
                         DEFAULT_THEATRICAL_EXCLUDE_RERELEASES,
                     ),
                 ): bool,
+                vol.Required(
+                    CONF_THEATRICAL_SORT_BY_RELEASE_DATE,
+                    default=self._current(
+                        CONF_THEATRICAL_SORT_BY_RELEASE_DATE,
+                        DEFAULT_THEATRICAL_SORT_BY_RELEASE_DATE,
+                    ),
+                ): bool,
             }),
         )
 

@@ -1,5 +1,14 @@
 # Entertainment Releases for Home Assistant
 
+## v0.4.3: Clearer configuration pages and theatrical sorting
+
+- Added clearer titles and descriptions to every configuration page.
+- Renamed the re-release toggle to **Exclude Theatrical Re-releases**.
+- Added **Sort by Release Date** to the Theatrical Releases page.
+  - On: release date ascending (soonest first).
+  - Off: popularity descending (most popular first).
+- Existing theatrical filters, multi-certification OR behavior, and entity IDs are unchanged.
+
 ## v0.4.2: Certification OR filtering
 
 The Theatrical and Digital pages now support selecting multiple certifications.
