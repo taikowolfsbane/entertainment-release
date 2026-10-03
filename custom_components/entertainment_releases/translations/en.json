@@ -1,0 +1,101 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Entertainment Releases",
+        "description": "Connect to TMDB. Detailed release filters are configured after setup.",
+        "data": {
+          "api_token": "TMDB Read Access Token",
+          "region": "Default region"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Unable to connect to TMDB. Check your token."
+    }
+  },
+  "options": {
+    "step": {
+      "theatrical": {
+        "title": "Configure Theatrical Releases",
+        "description": "Choose which upcoming movie releases should appear in the theatrical sensor. These filters are sent to TMDB Discover, with optional re-release filtering.",
+        "data": {
+          "theatrical_country": "Country",
+          "theatrical_release_types": "Release types",
+          "theatrical_days": "Days",
+          "theatrical_genres": "Genres",
+          "theatrical_certification": "Certifications",
+          "theatrical_language": "Original language",
+          "theatrical_min_score": "Minimum user score",
+          "theatrical_min_votes": "Minimum user votes",
+          "theatrical_runtime_min": "Minimum runtime (minutes)",
+          "theatrical_runtime_max": "Maximum runtime (minutes; 0 = no maximum)",
+          "theatrical_exclude_rereleases": "Exclude Theatrical Re-releases",
+          "theatrical_sort_by_release_date": "Sort by Release Date"
+        },
+        "data_description": {
+          "theatrical_exclude_rereleases": "When enabled, older movies returning to theaters are removed when TMDB's returned release date falls outside the configured date window.",
+          "theatrical_certification": "Select any certifications to include. Multiple selections use OR logic.",
+          "theatrical_sort_by_release_date": "On: show the soonest releases first. Off: show the most popular movies first."
+        }
+      },
+      "digital": {
+        "title": "Configure New Digital Releases",
+        "description": "Find movies whose TMDB Digital release date falls inside the selected window. Optionally narrow the results to specific services and ways the movie is available.",
+        "data": {
+          "digital_country": "Release / Watch Region",
+          "digital_days": "Digital Release Window (Days)",
+          "digital_genres": "Genres",
+          "digital_certification": "Certifications",
+          "digital_language": "Original language",
+          "digital_min_score": "Minimum user score",
+          "digital_min_votes": "Minimum user votes",
+          "digital_runtime_min": "Minimum runtime (minutes)",
+          "digital_runtime_max": "Maximum runtime (minutes; 0 = no maximum)",
+          "digital_providers": "Services",
+          "digital_monetization_types": "Availability Types"
+        },
+        "data_description": {
+          "digital_certification": "Select any certifications to include. Multiple selections use OR logic.",
+          "digital_country": "Country used for the regional TMDB Digital release date and movie watch-provider availability.",
+          "digital_days": "Show movies with a regional TMDB Digital release date between today and this many days ahead.",
+          "digital_providers": "Optional. Show only movies currently available from any selected movie provider in the chosen region. Leave empty to allow all providers.",
+          "digital_monetization_types": "Choose how the movie may be available: Subscription, Free, Ads, Rent, or Buy. Multiple selections use OR logic."
+        }
+      },
+      "tv": {
+        "title": "Configure TV Shows",
+        "description": "Choose shows by watch region, origin countries, streaming services, availability type, genres, show type, language, ratings, runtime, and excluded TMDB keywords.",
+        "data": {
+          "tv_country": "Watch Region",
+          "tv_days": "Days",
+          "tv_providers": "Streaming services",
+          "tv_genres": "Genres",
+          "tv_types": "Show types",
+          "tv_language": "Original language",
+          "tv_min_score": "Minimum user score",
+          "tv_min_votes": "Minimum user votes",
+          "tv_runtime_min": "Minimum runtime (minutes)",
+          "tv_runtime_max": "Maximum runtime (minutes; 0 = no maximum)",
+          "tv_excluded_keywords": "Exclude Keywords",
+          "tv_origin_countries": "Origin Countries",
+          "tv_monetization_types": "Availability Types"
+        },
+        "data_description": {
+          "tv_excluded_keywords": "Enter TMDB keyword names separated by commas. Example: Cooking, late-night show. A show is excluded if it matches any of them.",
+          "tv_country": "Country used for streaming-provider availability. TMDB supports one watch region per request.",
+          "tv_origin_countries": "Include shows originating from any selected country. For example, select United States and United Kingdom to include both U.S. and British shows. Leave empty to allow all origins.",
+          "tv_monetization_types": "Choose how a show may be available in the selected watch region. Multiple selections use OR logic."
+        }
+      },
+      "general": {
+        "title": "General Settings",
+        "description": "Set how often Entertainment Releases refreshes its data from TMDB.",
+        "data": {
+          "refresh_interval": "Refresh interval (hours)"
+        }
+      }
+    }
+  },
+  "title": "Entertainment Releases"
+}
