@@ -1,0 +1,51 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Entertainment Releases",
+        "description": "Connect to TMDB to retrieve movie and TV release information.",
+        "data": {
+          "api_token": "TMDB Read Access Token",
+          "region": "Region"
+        },
+        "data_description": {
+          "api_token": "Your TMDB API Read Access Token (Bearer token).",
+          "region": "Two-letter country code used for release information, such as US."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Unable to connect to TMDB. Check your token."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Entertainment Releases Settings",
+        "description": "Configure release windows, movie relevance, streaming services, TV genres, and refresh frequency.",
+        "data": {
+          "theatrical_days": "Theatrical look-ahead (days)",
+          "digital_days": "Digital look-ahead (days)",
+          "tv_days": "TV look-ahead (days)",
+          "refresh_interval": "Refresh interval (hours)",
+          "movie_language": "Movie original language",
+          "movie_min_score": "Minimum theatrical user score",
+          "tv_language": "TV original language",
+          "tv_providers": "TV streaming services",
+          "tv_genres": "TV genres"
+        },
+        "data_description": {
+          "theatrical_days": "Future theatrical release window, including today. Minimum 1, maximum 30.",
+          "digital_days": "Future first-digital-release window, including today. Minimum 1, maximum 30.",
+          "tv_days": "TV air-date window, including today. Minimum 1, maximum 30.",
+          "refresh_interval": "How often the integration requests updated TMDB data. Minimum 1 hour, maximum 24 hours.",
+          "movie_language": "ISO 639-1 original-language code. Use en for English.",
+          "movie_min_score": "Filters already-released theatrical titles below this TMDB user score. Future unrated releases are retained.",
+          "tv_language": "ISO 639-1 original-language code. Use en for English.",
+          "tv_providers": "Shows may be on any selected service. Provider matching uses OR logic and subscription availability.",
+          "tv_genres": "Shows may match any selected genre. Genre matching uses OR logic. Leave empty for all scripted/miniseries genres."
+        }
+      }
+    }
+  }
+}
