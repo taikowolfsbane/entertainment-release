@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+
+# Environment / secrets
+.env
+.env.*
+*.env
+secrets.yaml
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Home Assistant local data
+.storage/
+.homeassistant/
+configuration.yaml
