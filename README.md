@@ -6,9 +6,11 @@ Entertainment Releases turns TMDB Discover data into useful Home Assistant senso
 
 The integration currently supports:
 
-- Upcoming theatrical movie releases
-- Upcoming digital movie releases
+- New and upcoming theatrical movie releases
+- New regional Digital movie releases
+- Optional movie provider and rent/buy/stream availability filtering
 - TV shows airing within a configurable date range
+- Season and episode details for TV releases
 - Country and region filtering
 - Release-type filtering
 - Genre filtering
@@ -102,7 +104,7 @@ Configuration is split into separate pages so each type of content can be tuned 
 
 ## Theatrical Releases
 
-The theatrical page controls the movies shown in the theatrical sensor.
+The theatrical page controls the movies shown in the **New & Upcoming Theatrical Releases** sensor. This feed covers movies releasing today through the configured number of future days; it is not intended to represent every movie currently playing in theaters.
 
 Available filters include:
 
@@ -152,15 +154,27 @@ Movies are ordered by TMDB popularity, with the most popular titles shown first.
 
 ---
 
-## Digital Releases
+## New Digital Releases
 
-The digital page controls the movies shown in the digital release sensor.
+The digital page is designed to answer a simple question:
+
+**Which movies have a new TMDB Digital release date in my selected region?**
+
+Entertainment Releases always uses TMDB release type **Digital (type 4)** for
+this sensor. The release type is no longer user-selectable on this page.
 
 Available filters include:
 
-- **Country**
-- **Release Type**
-- **Days**
+- **Release / Watch Region**
+- **Digital Release Window**
+  - 1–30 days
+- **Services**
+- **Availability Types**
+  - Subscription
+  - Free
+  - Ads
+  - Rent
+  - Buy
 - **Genres**
 - **Certifications**
 - **Original Language**
@@ -169,9 +183,55 @@ Available filters include:
 - **Minimum Runtime**
 - **Maximum Runtime**
 
-The default release type is **Digital**.
+### How the Digital Date Works
 
-This allows the integration to show movies becoming available digitally after a theatrical run as well as direct-to-digital releases, based on TMDB's release data.
+TMDB's Discover API supports using `region` together with
+`with_release_type=4`.
+
+When these are combined, TMDB uses the matching regional Digital release date
+for the Discover result. Entertainment Releases then limits that date to the
+configured window.
+
+For example, a movie may have:
+
+- Theatrical release: August 14
+- Digital release: October 6
+
+If the integration is configured for the United States and October 6 falls
+inside the selected Digital Release Window, the movie can appear in the New
+Digital Releases sensor with October 6 as its release date.
+
+### Services and Availability Types
+
+The Services filter is optional.
+
+If no services are selected, the integration shows qualifying new Digital
+releases regardless of provider.
+
+If services are selected, a movie must also currently be available from at
+least one selected provider in the configured watch region.
+
+Availability Types can include:
+
+- Subscription
+- Free
+- Ads
+- Rent
+- Buy
+
+The default is:
+
+- Subscription
+- Rent
+- Buy
+
+Multiple services and multiple availability types use OR logic within their
+respective groups.
+
+This approach does **not** claim that a movie was added to a specific service
+for the first time on that date. The date represents TMDB's regional Digital
+release date, while provider data represents current availability.
+
 
 ---
 
@@ -358,7 +418,7 @@ Entertainment Releases creates three sensors.
 
 Depending on your Home Assistant entity registry, the entity IDs may appear similar to:
 
-- `sensor.entertainment_releases_movies_in_theaters_today`
+- `sensor.entertainment_releases_movies_in_theaters_today` — New & Upcoming Theatrical Releases
 - `sensor.entertainment_releases_movies_released_digitally_today`
 - `sensor.entertainment_releases_tv_shows_airing_today`
 
@@ -423,6 +483,80 @@ TV entries may include:
 - TMDB URL
 
 ---
+
+
+## TV Episode Details
+
+For each TV series returned by TMDB Discover, Entertainment Releases also
+looks up the episode or episodes whose air dates fall inside the configured
+TV date window.
+
+Each TV item includes an `episodes` list.
+
+Example:
+
+```yaml
+name: Transformers: CYBERWORLD
+episode_count: 1
+season_number: 2
+episode_number: 4
+episode_name: Energon Surge
+episode_air_date: "2026-10-03"
+episode_code: S02E04
+episodes:
+  - season_number: 2
+    episode_number: 4
+    episode_code: S02E04
+    name: Energon Surge
+    air_date: "2026-10-03"
+    runtime: 6
+```
+
+The top-level `season_number`, `episode_number`, `episode_name`,
+`episode_air_date`, and `episode_code` fields are convenience values for the
+first matching episode.
+
+If multiple episodes air inside the selected window, all of them are included
+in the `episodes` list.
+
+### Example TV Markdown
+
+```jinja
+{% set shows = state_attr('sensor.entertainment_releases_tv_shows_airing_today', 'items') or [] %}
+
+{% if shows %}
+  {% for show in shows %}
+
+{% if show.poster_path %}
+![{{ show.name }}](https://image.tmdb.org/t/p/w342{{ show.poster_path }})
+{% endif %}
+
+**{{ show.name }}**
+
+{% if show.episodes %}
+  {% for episode in show.episodes %}
+📺 **{{ episode.episode_code }} — {{ episode.name }}**  
+{% set air_date = strptime(episode.air_date, '%Y-%m-%d') %}
+📅 **Air Date:** {{ air_date.strftime('%B %-d, %Y') }}  
+{% if episode.runtime %}⏱️ **Runtime:** {{ episode.runtime }} min  {% endif %}
+
+  {% endfor %}
+{% endif %}
+
+⭐ **User Score:** {{ (show.vote_average * 10) | round(0) | int }}%
+
+{{ show.overview }}
+
+---
+
+  {% endfor %}
+{% else %}
+
+No TV releases found.
+
+{% endif %}
+```
+
 
 # Example Home Assistant Markdown Card
 

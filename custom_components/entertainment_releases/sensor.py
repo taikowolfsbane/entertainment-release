@@ -20,8 +20,8 @@ async def async_setup_entry(
     coordinator: EntertainmentCoordinator = entry.runtime_data
     async_add_entities(
         [
-            EntertainmentSensor(coordinator, "theatrical", "Movies in Theaters", "mdi:movie-open"),
-            EntertainmentSensor(coordinator, "digital", "Movies Released Digitally", "mdi:movie-open-outline"),
+            EntertainmentSensor(coordinator, "theatrical", "New & Upcoming Theatrical Releases", "mdi:movie-open"),
+            EntertainmentSensor(coordinator, "digital", "New Digital Releases", "mdi:movie-open-outline"),
             EntertainmentSensor(coordinator, "tv", "TV Shows Airing", "mdi:television"),
         ]
     )

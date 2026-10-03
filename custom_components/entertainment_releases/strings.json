@@ -40,22 +40,27 @@
         }
       },
       "digital": {
-        "title": "Configure Digital Releases",
-        "description": "Choose which movie releases should appear in the digital sensor using TMDB Discover filters such as release type, genres, certification, language, score, votes, and runtime.",
+        "title": "Configure New Digital Releases",
+        "description": "Find movies whose TMDB Digital release date falls inside the selected window. Optionally narrow the results to specific services and ways the movie is available.",
         "data": {
-          "digital_country": "Country",
-          "digital_release_types": "Release types",
-          "digital_days": "Days",
+          "digital_country": "Release / Watch Region",
+          "digital_days": "Digital Release Window (Days)",
           "digital_genres": "Genres",
           "digital_certification": "Certifications",
           "digital_language": "Original language",
           "digital_min_score": "Minimum user score",
           "digital_min_votes": "Minimum user votes",
           "digital_runtime_min": "Minimum runtime (minutes)",
-          "digital_runtime_max": "Maximum runtime (minutes; 0 = no maximum)"
+          "digital_runtime_max": "Maximum runtime (minutes; 0 = no maximum)",
+          "digital_providers": "Services",
+          "digital_monetization_types": "Availability Types"
         },
         "data_description": {
-          "digital_certification": "Select any certifications to include. Multiple selections use OR logic."
+          "digital_certification": "Select any certifications to include. Multiple selections use OR logic.",
+          "digital_country": "Country used for the regional TMDB Digital release date and movie watch-provider availability.",
+          "digital_days": "Show movies with a regional TMDB Digital release date between today and this many days ahead.",
+          "digital_providers": "Optional. Show only movies currently available from any selected movie provider in the chosen region. Leave empty to allow all providers.",
+          "digital_monetization_types": "Choose how the movie may be available: Subscription, Free, Ads, Rent, or Buy. Multiple selections use OR logic."
         }
       },
       "tv": {

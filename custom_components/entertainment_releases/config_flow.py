@@ -15,6 +15,7 @@ from .coordinator import (
     get_countries,
     get_languages,
     get_movie_genres,
+    get_movie_watch_providers,
     get_tv_genres,
     get_tv_watch_providers,
     resolve_keyword_ids,
@@ -163,12 +164,49 @@ class EntertainmentReleasesOptionsFlow(OptionsFlowWithReload):
             self._pending.update(user_input)
             return await self.async_step_tv()
 
+        digital_country = self._current(
+            CONF_DIGITAL_COUNTRY,
+            DEFAULT_DIGITAL_COUNTRY,
+        )
+        movie_providers = await get_movie_watch_providers(
+            self.hass,
+            self.config_entry.data[CONF_API_TOKEN],
+            digital_country,
+        )
+        digital_provider_defaults = [
+            provider_id
+            for provider_id in self._current(
+                CONF_DIGITAL_PROVIDERS,
+                DEFAULT_DIGITAL_PROVIDERS,
+            )
+            if provider_id in movie_providers
+        ]
+
         return self.async_show_form(
             step_id="digital",
             data_schema=vol.Schema({
-                vol.Required(CONF_DIGITAL_COUNTRY, default=self._current(CONF_DIGITAL_COUNTRY, DEFAULT_DIGITAL_COUNTRY)): vol.In(self._countries),
-                vol.Required(CONF_DIGITAL_RELEASE_TYPES, default=self._current(CONF_DIGITAL_RELEASE_TYPES, DEFAULT_DIGITAL_RELEASE_TYPES)): cv.multi_select(RELEASE_TYPES),
-                vol.Required(CONF_DIGITAL_DAYS, default=self._current(CONF_DIGITAL_DAYS, DEFAULT_DIGITAL_DAYS)): _number_box(1, 30),
+                vol.Required(
+                    CONF_DIGITAL_COUNTRY,
+                    default=digital_country,
+                ): vol.In(self._countries),
+                vol.Required(
+                    CONF_DIGITAL_DAYS,
+                    default=self._current(
+                        CONF_DIGITAL_DAYS,
+                        DEFAULT_DIGITAL_DAYS,
+                    ),
+                ): _number_box(1, 30),
+                vol.Optional(
+                    CONF_DIGITAL_PROVIDERS,
+                    default=digital_provider_defaults,
+                ): cv.multi_select(movie_providers),
+                vol.Optional(
+                    CONF_DIGITAL_MONETIZATION_TYPES,
+                    default=self._current(
+                        CONF_DIGITAL_MONETIZATION_TYPES,
+                        DEFAULT_DIGITAL_MONETIZATION_TYPES,
+                    ),
+                ): cv.multi_select(WATCH_MONETIZATION_TYPES),
                 vol.Optional(CONF_DIGITAL_GENRES, default=self._current(CONF_DIGITAL_GENRES, DEFAULT_DIGITAL_GENRES)): cv.multi_select(self._movie_genres),
                 vol.Optional(
                     CONF_DIGITAL_CERTIFICATION,

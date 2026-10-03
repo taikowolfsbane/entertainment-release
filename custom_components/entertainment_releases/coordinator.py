@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 from typing import Any
@@ -117,6 +118,38 @@ async def resolve_keyword_ids(
                 resolved.append(keyword_id)
 
     return resolved
+
+
+async def get_movie_watch_providers(
+    hass: HomeAssistant,
+    api_token: str,
+    region: str,
+) -> dict[str, str]:
+    """Return available movie watch providers for a region."""
+    data = await _simple_get(
+        hass,
+        api_token,
+        "/watch/providers/movie",
+        {
+            "language": "en-US",
+            "watch_region": region,
+        },
+    )
+
+    results = sorted(
+        data.get("results", []),
+        key=lambda item: (
+            item.get("display_priority", 9999),
+            item.get("provider_name", ""),
+        ),
+    )
+
+    return {
+        str(item["provider_id"]): item["provider_name"]
+        for item in results
+        if item.get("provider_id") is not None
+        and item.get("provider_name")
+    }
 
 
 async def get_tv_watch_providers(
@@ -259,6 +292,14 @@ class EntertainmentCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "min_votes": self.options.get(CONF_DIGITAL_MIN_VOTES, DEFAULT_DIGITAL_MIN_VOTES),
             "runtime_min": self.options.get(CONF_DIGITAL_RUNTIME_MIN, DEFAULT_DIGITAL_RUNTIME_MIN),
             "runtime_max": self.options.get(CONF_DIGITAL_RUNTIME_MAX, DEFAULT_DIGITAL_RUNTIME_MAX),
+            "providers": self.options.get(
+                CONF_DIGITAL_PROVIDERS,
+                DEFAULT_DIGITAL_PROVIDERS,
+            ),
+            "monetization_types": self.options.get(
+                CONF_DIGITAL_MONETIZATION_TYPES,
+                DEFAULT_DIGITAL_MONETIZATION_TYPES,
+            ),
         }
 
     async def _discover_movie_category(
@@ -288,9 +329,20 @@ class EntertainmentCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ),
         }
 
-        release_types = [str(v) for v in values["release_types"]]
-        if release_types:
-            params["with_release_type"] = "|".join(release_types)
+        if category == "digital":
+            # "New Digital Releases" is intentionally defined as TMDB release
+            # type 4. With region + release date filters, TMDB returns the
+            # matching regional digital release date.
+            params["with_release_type"] = "4"
+        else:
+            release_types = [
+                str(v)
+                for v in values["release_types"]
+            ]
+            if release_types:
+                params["with_release_type"] = "|".join(
+                    release_types
+                )
 
         genres = [str(v) for v in values["genres"]]
         if genres:
@@ -321,6 +373,33 @@ class EntertainmentCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         runtime_max = int(values["runtime_max"] or 0)
         if runtime_max > 0:
             params["with_runtime.lte"] = runtime_max
+
+        if category == "digital":
+            providers = [
+                str(value)
+                for value in values.get("providers", [])
+                if str(value)
+            ]
+            monetization_types = [
+                str(value)
+                for value in values.get(
+                    "monetization_types",
+                    [],
+                )
+                if str(value)
+            ]
+
+            params["watch_region"] = values["country"]
+
+            if providers:
+                params["with_watch_providers"] = "|".join(
+                    providers
+                )
+
+            if monetization_types:
+                params["with_watch_monetization_types"] = "|".join(
+                    monetization_types
+                )
 
         if certifications:
             merged: dict[int, dict[str, Any]] = {}
@@ -535,8 +614,19 @@ class EntertainmentCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 params,
             )
 
-        return [
-            {
+        semaphore = asyncio.Semaphore(5)
+
+        async def enrich(item: dict[str, Any]) -> dict[str, Any]:
+            async with semaphore:
+                episodes = await self._get_tv_episodes_in_window(
+                    item["id"],
+                    start,
+                    end,
+                )
+
+            first_episode = episodes[0] if episodes else {}
+
+            return {
                 "id": item["id"],
                 "name": item.get("name"),
                 "overview": item.get("overview"),
@@ -556,6 +646,145 @@ class EntertainmentCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 "origin_country": item.get("origin_country", []),
                 "original_language": item.get("original_language"),
                 "tmdb_url": f"https://www.themoviedb.org/tv/{item['id']}",
+                "episode_count": len(episodes),
+                "episodes": episodes,
+                # Convenience fields for simple Markdown cards. When more
+                # than one episode matches, these describe the first one.
+                "season_number": first_episode.get("season_number"),
+                "episode_number": first_episode.get("episode_number"),
+                "episode_name": first_episode.get("name"),
+                "episode_air_date": first_episode.get("air_date"),
+                "episode_code": first_episode.get("episode_code"),
             }
-            for item in results
+
+        enriched = await asyncio.gather(
+            *(enrich(item) for item in results)
+        )
+
+        return list(enriched)
+
+    async def _get_tv_episodes_in_window(
+        self,
+        series_id: int,
+        start: str,
+        end: str,
+    ) -> list[dict[str, Any]]:
+        """Return episodes for a series whose air date falls in the window.
+
+        Discover TV returns series-level objects, so this method queries the
+        series details to identify likely current seasons and then filters
+        season episodes by the configured air-date window.
+        """
+        details = await self._request(
+            f"/tv/{series_id}",
+            {"language": "en-US"},
+        )
+
+        candidate_seasons: set[int] = set()
+
+        # TMDB exposes the latest/next episode on the series details response.
+        # These are strong hints for the currently active season.
+        for field in ("last_episode_to_air", "next_episode_to_air"):
+            episode = details.get(field) or {}
+            season_number = episode.get("season_number")
+            if season_number is not None:
+                candidate_seasons.add(int(season_number))
+
+        seasons = [
+            season
+            for season in details.get("seasons", [])
+            if season.get("season_number") is not None
         ]
+
+        # Also include the three highest regular season numbers. This covers
+        # shows where TMDB's next/last episode hints are incomplete while
+        # avoiding a request for every historical season of a long-running
+        # series.
+        regular_numbers = sorted(
+            {
+                int(season["season_number"])
+                for season in seasons
+                if int(season["season_number"]) > 0
+            },
+            reverse=True,
+        )
+        candidate_seasons.update(regular_numbers[:3])
+
+        # Include specials only when TMDB specifically points at season 0 or
+        # the specials season itself begins inside the requested window.
+        for season in seasons:
+            season_number = int(season["season_number"])
+            air_date = season.get("air_date")
+            if (
+                season_number == 0
+                and air_date
+                and start <= air_date <= end
+            ):
+                candidate_seasons.add(0)
+
+        if not candidate_seasons:
+            return []
+
+        season_payloads = await asyncio.gather(
+            *(
+                self._request(
+                    f"/tv/{series_id}/season/{season_number}",
+                    {"language": "en-US"},
+                )
+                for season_number in sorted(candidate_seasons)
+            ),
+            return_exceptions=True,
+        )
+
+        episodes: list[dict[str, Any]] = []
+
+        for season_data in season_payloads:
+            if isinstance(season_data, Exception):
+                _LOGGER.debug(
+                    "Unable to retrieve a TV season for series %s: %s",
+                    series_id,
+                    season_data,
+                )
+                continue
+
+            for episode in season_data.get("episodes", []):
+                air_date = episode.get("air_date")
+                if not air_date or not (start <= air_date <= end):
+                    continue
+
+                season_number = int(episode.get("season_number") or 0)
+                episode_number = int(episode.get("episode_number") or 0)
+
+                episodes.append(
+                    {
+                        "id": episode.get("id"),
+                        "season_number": season_number,
+                        "episode_number": episode_number,
+                        "episode_code": (
+                            f"S{season_number:02d}E{episode_number:02d}"
+                        ),
+                        "name": episode.get("name"),
+                        "overview": episode.get("overview"),
+                        "air_date": air_date,
+                        "runtime": episode.get("runtime"),
+                        "still_path": episode.get("still_path"),
+                        "still_url": (
+                            "https://image.tmdb.org/t/p/w300"
+                            f"{episode.get('still_path')}"
+                            if episode.get("still_path")
+                            else None
+                        ),
+                        "vote_average": episode.get("vote_average"),
+                        "vote_count": episode.get("vote_count"),
+                    }
+                )
+
+        episodes.sort(
+            key=lambda episode: (
+                episode.get("air_date") or "9999-12-31",
+                int(episode.get("season_number") or 0),
+                int(episode.get("episode_number") or 0),
+            )
+        )
+
+        return episodes
