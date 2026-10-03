@@ -1,0 +1,114 @@
+DOMAIN = "entertainment_releases"
+
+CONF_API_TOKEN = "api_token"
+CONF_REGION = "region"
+CONF_REFRESH_INTERVAL = "refresh_interval"
+
+CONF_THEATRICAL_COUNTRY = "theatrical_country"
+CONF_THEATRICAL_RELEASE_TYPES = "theatrical_release_types"
+CONF_THEATRICAL_DAYS = "theatrical_days"
+CONF_THEATRICAL_GENRES = "theatrical_genres"
+CONF_THEATRICAL_CERTIFICATION = "theatrical_certification"
+CONF_THEATRICAL_LANGUAGE = "theatrical_language"
+CONF_THEATRICAL_MIN_SCORE = "theatrical_min_score"
+CONF_THEATRICAL_MIN_VOTES = "theatrical_min_votes"
+CONF_THEATRICAL_RUNTIME_MIN = "theatrical_runtime_min"
+CONF_THEATRICAL_RUNTIME_MAX = "theatrical_runtime_max"
+CONF_THEATRICAL_EXCLUDE_RERELEASES = "theatrical_exclude_rereleases"
+CONF_THEATRICAL_SORT_BY_RELEASE_DATE = "theatrical_sort_by_release_date"
+
+CONF_DIGITAL_COUNTRY = "digital_country"
+CONF_DIGITAL_RELEASE_TYPES = "digital_release_types"
+CONF_DIGITAL_DAYS = "digital_days"
+CONF_DIGITAL_GENRES = "digital_genres"
+CONF_DIGITAL_CERTIFICATION = "digital_certification"
+CONF_DIGITAL_LANGUAGE = "digital_language"
+CONF_DIGITAL_MIN_SCORE = "digital_min_score"
+CONF_DIGITAL_MIN_VOTES = "digital_min_votes"
+CONF_DIGITAL_RUNTIME_MIN = "digital_runtime_min"
+CONF_DIGITAL_RUNTIME_MAX = "digital_runtime_max"
+
+CONF_TV_COUNTRY = "tv_country"
+CONF_TV_DAYS = "tv_days"
+CONF_TV_GENRES = "tv_genres"
+CONF_TV_LANGUAGE = "tv_language"
+CONF_TV_MIN_SCORE = "tv_min_score"
+CONF_TV_MIN_VOTES = "tv_min_votes"
+CONF_TV_RUNTIME_MIN = "tv_runtime_min"
+CONF_TV_RUNTIME_MAX = "tv_runtime_max"
+CONF_TV_PROVIDERS = "tv_providers"
+CONF_TV_TYPES = "tv_types"
+
+DEFAULT_REGION = "US"
+DEFAULT_REFRESH_INTERVAL = 6
+
+DEFAULT_THEATRICAL_COUNTRY = "US"
+DEFAULT_THEATRICAL_RELEASE_TYPES = ["3"]
+DEFAULT_THEATRICAL_DAYS = 7
+DEFAULT_THEATRICAL_GENRES = []
+DEFAULT_THEATRICAL_CERTIFICATION = []
+DEFAULT_THEATRICAL_LANGUAGE = "en"
+DEFAULT_THEATRICAL_MIN_SCORE = 1.0
+DEFAULT_THEATRICAL_MIN_VOTES = 0
+DEFAULT_THEATRICAL_RUNTIME_MIN = 0
+DEFAULT_THEATRICAL_RUNTIME_MAX = 0
+DEFAULT_THEATRICAL_EXCLUDE_RERELEASES = True
+DEFAULT_THEATRICAL_SORT_BY_RELEASE_DATE = False
+
+DEFAULT_DIGITAL_COUNTRY = "US"
+DEFAULT_DIGITAL_RELEASE_TYPES = ["4"]
+DEFAULT_DIGITAL_DAYS = 1
+DEFAULT_DIGITAL_GENRES = []
+DEFAULT_DIGITAL_CERTIFICATION = []
+DEFAULT_DIGITAL_LANGUAGE = "en"
+DEFAULT_DIGITAL_MIN_SCORE = 0.0
+DEFAULT_DIGITAL_MIN_VOTES = 0
+DEFAULT_DIGITAL_RUNTIME_MIN = 0
+DEFAULT_DIGITAL_RUNTIME_MAX = 0
+
+DEFAULT_TV_COUNTRY = "US"
+DEFAULT_TV_DAYS = 1
+DEFAULT_TV_GENRES = []
+DEFAULT_TV_LANGUAGE = "en"
+DEFAULT_TV_MIN_SCORE = 0.0
+DEFAULT_TV_MIN_VOTES = 0
+DEFAULT_TV_RUNTIME_MIN = 0
+DEFAULT_TV_RUNTIME_MAX = 0
+DEFAULT_TV_PROVIDERS = ["8", "9", "15", "337", "350", "386", "531", "1899"]
+DEFAULT_TV_TYPES = ["2", "4"]
+
+MIN_LOOKAHEAD_DAYS = 1
+MAX_LOOKAHEAD_DAYS = 30
+MIN_REFRESH_INTERVAL = 1
+MAX_REFRESH_INTERVAL = 24
+
+RELEASE_TYPES = {
+    "1": "Premiere",
+    "2": "Theatrical (Limited)",
+    "3": "Theatrical",
+    "4": "Digital",
+    "5": "Physical",
+    "6": "TV",
+}
+
+TV_TYPES = {
+    "0": "Documentary",
+    "1": "News",
+    "2": "Miniseries",
+    "3": "Reality",
+    "4": "Scripted",
+    "5": "Talk Show",
+    "6": "Video",
+}
+
+US_CERTIFICATIONS = {
+    "NR": "NR",
+    "G": "G",
+    "PG": "PG",
+    "PG-13": "PG-13",
+    "R": "R",
+    "NC-17": "NC-17",
+}
+
+API_BASE = "https://api.themoviedb.org/3"
+PLATFORMS = ["sensor"]
