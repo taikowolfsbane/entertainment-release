@@ -3,7 +3,7 @@
   "name": "Entertainment Releases",
   "codeowners": [],
   "config_flow": true,
-  "documentation": "https://github.com/OWNER/entertainment-releases",
+  "documentation": "https://github.com/taikowolfsbane/entertainment-release",
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "requirements": [],
