@@ -94,9 +94,8 @@ class EntertainmentCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             timeout=30,
         ) as response:
             if response.status != 200:
-                body = await response.text()
                 raise RuntimeError(
-                    f"TMDB HTTP {response.status}: {body[:250]}"
+                    f"TMDB HTTP {response.status}"
                 )
             return await response.json()
 
