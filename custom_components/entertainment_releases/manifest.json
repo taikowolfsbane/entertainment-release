@@ -1,0 +1,14 @@
+{
+  "domain": "entertainment_releases",
+  "name": "Entertainment Releases",
+  "codeowners": [
+    "@taikowolfsbane"
+  ],
+  "config_flow": true,
+  "documentation": "https://github.com/taikowolfsbane/entertainment-release",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "requirements": [],
+  "single_config_entry": true,
+  "version": "0.4.5"
+}
