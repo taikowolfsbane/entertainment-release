@@ -61,3 +61,15 @@ The sensor state is the number of matching titles. The `items` attribute contain
 - Dedicated Lovelace card
 - Home Assistant notifications
 - Tonight's Picks
+
+## Data Source & Attribution
+
+Entertainment Releases uses data provided by [The Movie Database (TMDB)](https://www.themoviedb.org/).
+
+This product uses the TMDB API but is not endorsed or certified by TMDB.
+
+Each user of this integration must obtain and configure their own TMDB API credentials. No shared TMDB API key or access token is included with this project.
+
+This project is intended for personal, non-commercial use. Users are responsible for ensuring that their use of TMDB data complies with TMDB's API terms and policies.
+
+If streaming-provider availability is displayed, that availability data may be provided through TMDB's partnership with JustWatch and should be attributed to JustWatch where applicable.
