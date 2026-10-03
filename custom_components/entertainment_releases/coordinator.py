@@ -76,6 +76,49 @@ async def get_tv_genres(hass: HomeAssistant, api_token: str) -> dict[str, str]:
     return {str(item["id"]): item["name"] for item in data.get("genres", [])}
 
 
+async def resolve_keyword_ids(
+    hass: HomeAssistant,
+    api_token: str,
+    keyword_text: str,
+) -> list[str]:
+    """Resolve comma-separated TMDB keyword names to IDs."""
+    names = [
+        part.strip()
+        for part in keyword_text.split(",")
+        if part.strip()
+    ]
+
+    resolved: list[str] = []
+
+    for name in names:
+        data = await _simple_get(
+            hass,
+            api_token,
+            "/search/keyword",
+            {"query": name, "page": 1},
+        )
+
+        results = data.get("results", [])
+        exact = next(
+            (
+                item
+                for item in results
+                if str(item.get("name", "")).casefold()
+                == name.casefold()
+            ),
+            None,
+        )
+
+        match = exact or (results[0] if results else None)
+
+        if match and match.get("id") is not None:
+            keyword_id = str(match["id"])
+            if keyword_id not in resolved:
+                resolved.append(keyword_id)
+
+    return resolved
+
+
 async def get_tv_watch_providers(
     hass: HomeAssistant,
     api_token: str,
@@ -376,6 +419,13 @@ class EntertainmentCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         genres = [str(v) for v in self.options.get(CONF_TV_GENRES, DEFAULT_TV_GENRES)]
         providers = [str(v) for v in self.options.get(CONF_TV_PROVIDERS, DEFAULT_TV_PROVIDERS)]
         tv_types = [str(v) for v in self.options.get(CONF_TV_TYPES, DEFAULT_TV_TYPES)]
+        excluded_keyword_ids = [
+            str(v)
+            for v in self.options.get(
+                CONF_TV_EXCLUDED_KEYWORD_IDS,
+                DEFAULT_TV_EXCLUDED_KEYWORD_IDS,
+            )
+        ]
 
         params: dict[str, Any] = {
             "include_adult": "false",
@@ -427,6 +477,13 @@ class EntertainmentCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         if tv_types:
             params["with_type"] = "|".join(tv_types)
+
+        if excluded_keyword_ids:
+            # Pipe-separated IDs mean OR-style keyword exclusion:
+            # exclude a show if it matches any selected keyword.
+            params["without_keywords"] = "|".join(
+                excluded_keyword_ids
+            )
 
         results = await self._request_all_pages("/discover/tv", params)
 

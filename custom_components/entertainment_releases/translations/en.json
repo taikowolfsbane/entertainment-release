@@ -60,7 +60,7 @@
       },
       "tv": {
         "title": "Configure TV Shows",
-        "description": "Choose which shows should appear in the TV sensor. Filter by country, streaming services, genres, show type, language, score, votes, and runtime.",
+        "description": "Choose which shows should appear in the TV sensor. Filter by country, streaming services, genres, show type, language, ratings, runtime, and TMDB keywords you want excluded.",
         "data": {
           "tv_country": "Country",
           "tv_days": "Days",
@@ -71,7 +71,11 @@
           "tv_min_score": "Minimum user score",
           "tv_min_votes": "Minimum user votes",
           "tv_runtime_min": "Minimum runtime (minutes)",
-          "tv_runtime_max": "Maximum runtime (minutes; 0 = no maximum)"
+          "tv_runtime_max": "Maximum runtime (minutes; 0 = no maximum)",
+          "tv_excluded_keywords": "Exclude Keywords"
+        },
+        "data_description": {
+          "tv_excluded_keywords": "Enter TMDB keyword names separated by commas. Example: Cooking, late-night show. A show is excluded if it matches any of them."
         }
       },
       "general": {

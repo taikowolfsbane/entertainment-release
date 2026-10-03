@@ -17,6 +17,7 @@ from .coordinator import (
     get_movie_genres,
     get_tv_genres,
     get_tv_watch_providers,
+    resolve_keyword_ids,
     test_tmdb_connection,
 )
 
@@ -190,6 +191,23 @@ class EntertainmentReleasesOptionsFlow(OptionsFlowWithReload):
     ) -> ConfigFlowResult:
         await self._load_common_lists()
         if user_input is not None:
+            keyword_text = str(
+                user_input.get(
+                    CONF_TV_EXCLUDED_KEYWORDS,
+                    DEFAULT_TV_EXCLUDED_KEYWORDS,
+                )
+                or ""
+            ).strip()
+
+            keyword_ids = await resolve_keyword_ids(
+                self.hass,
+                self.config_entry.data[CONF_API_TOKEN],
+                keyword_text,
+            )
+
+            user_input[CONF_TV_EXCLUDED_KEYWORDS] = keyword_text
+            user_input[CONF_TV_EXCLUDED_KEYWORD_IDS] = keyword_ids
+
             self._pending.update(user_input)
             return await self.async_step_general()
 
@@ -211,6 +229,13 @@ class EntertainmentReleasesOptionsFlow(OptionsFlowWithReload):
                 vol.Required(CONF_TV_DAYS, default=self._current(CONF_TV_DAYS, DEFAULT_TV_DAYS)): _number_box(1, 30),
                 vol.Optional(CONF_TV_PROVIDERS, default=provider_defaults): cv.multi_select(providers),
                 vol.Optional(CONF_TV_GENRES, default=self._current(CONF_TV_GENRES, DEFAULT_TV_GENRES)): cv.multi_select(self._tv_genres),
+                vol.Optional(
+                    CONF_TV_EXCLUDED_KEYWORDS,
+                    default=self._current(
+                        CONF_TV_EXCLUDED_KEYWORDS,
+                        DEFAULT_TV_EXCLUDED_KEYWORDS,
+                    ),
+                ): str,
                 vol.Optional(CONF_TV_TYPES, default=self._current(CONF_TV_TYPES, DEFAULT_TV_TYPES)): cv.multi_select(TV_TYPES),
                 vol.Required(CONF_TV_LANGUAGE, default=self._current(CONF_TV_LANGUAGE, DEFAULT_TV_LANGUAGE)): vol.In(self._languages),
                 vol.Required(CONF_TV_MIN_SCORE, default=self._current(CONF_TV_MIN_SCORE, DEFAULT_TV_MIN_SCORE)): _number_box(0, 10, 0.5),
