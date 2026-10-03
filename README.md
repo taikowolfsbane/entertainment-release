@@ -1,5 +1,13 @@
 # Entertainment Releases for Home Assistant
 
+## v0.3.1 correction
+
+- Derives movie dates from TMDB regional release history instead of trusting the generic movie `release_date` field.
+- Theatrical results validate against TMDB release type **3 (Theatrical)** only, so an earlier limited engagement does not hide a later wide theatrical opening.
+- Old re-releases such as classic films should no longer appear as brand-new theatrical releases.
+- Digital results continue to use the movie's first regional type **4 (Digital)** date.
+
+
 A HACS-installable Home Assistant custom integration that builds a useful movie and TV release feed using TMDB.
 
 ## v0.3.0 highlights

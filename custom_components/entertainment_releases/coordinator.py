@@ -239,7 +239,7 @@ class EntertainmentCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 theatrical_end,
                 "3",
                 first_release_only=True,
-                first_release_types=(2, 3),
+                first_release_types=(3,),
                 apply_relevance_filter=True,
             )
 
@@ -334,7 +334,13 @@ class EntertainmentCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         first_release_types: tuple[int, ...],
         apply_relevance_filter: bool,
     ) -> list[dict[str, Any]]:
-        """Find movies released in a date range."""
+        """Find movies released in a date range.
+
+        TMDB discover is used only to find candidates. The actual regional
+        release date is then derived from each movie's release history so the
+        integration does not accidentally display the movie's primary/global
+        release date or a later re-release as a new release.
+        """
         params: dict[str, Any] = {
             "include_adult": "false",
             "include_video": "false",
@@ -357,34 +363,42 @@ class EntertainmentCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         filtered_results: list[dict[str, Any]] = []
 
         for item in results:
-            release_date = item.get("release_date")
-
-            if not release_date:
-                continue
-
-            if first_release_only and not await self._is_first_release_of_types(
+            regional_dates = await self._get_regional_release_dates(
                 item["id"],
-                release_date,
                 first_release_types,
-            ):
+            )
+
+            if first_release_only:
+                if not regional_dates:
+                    # Without release-history confirmation, do not label an
+                    # old or ambiguous title as a new release.
+                    continue
+
+                actual_release_date = min(regional_dates)
+
+                if not (start <= actual_release_date <= end):
+                    continue
+            else:
+                actual_release_date = item.get("release_date")
+
+            if not actual_release_date:
                 continue
 
             if apply_relevance_filter:
-                # Do not hide upcoming titles simply because they have not
-                # accumulated ratings yet. Apply the score floor only when
-                # the title has already reached its release date.
-                if release_date <= start:
+                # Apply the score threshold only once the movie has reached
+                # its release date. Future unrated releases remain visible.
+                if actual_release_date <= start:
                     vote_average = float(item.get("vote_average") or 0)
                     if vote_average < self.movie_min_score:
                         continue
 
+            item = dict(item)
+            item["_regional_release_date"] = actual_release_date
             filtered_results.append(item)
 
-        # Group naturally by release date, then put the more popular titles
-        # first within each day.
         filtered_results.sort(
             key=lambda item: (
-                item.get("release_date") or "9999-12-31",
+                item.get("_regional_release_date") or "9999-12-31",
                 -float(item.get("popularity") or 0),
             )
         )
@@ -402,7 +416,7 @@ class EntertainmentCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     else None
                 ),
                 "backdrop_path": item.get("backdrop_path"),
-                "release_date": item.get("release_date"),
+                "release_date": item.get("_regional_release_date"),
                 "vote_average": item.get("vote_average"),
                 "vote_count": item.get("vote_count"),
                 "popularity": item.get("popularity"),
@@ -414,19 +428,18 @@ class EntertainmentCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             for item in filtered_results
         ]
 
-    async def _is_first_release_of_types(
+    async def _get_regional_release_dates(
         self,
         movie_id: int,
-        candidate_date: str,
         release_types: tuple[int, ...],
-    ) -> bool:
-        """Check whether a date is the first regional release of given types."""
+    ) -> list[str]:
+        """Return regional calendar dates for the requested release types."""
         data = await self._request(
             f"/movie/{movie_id}/release_dates",
             {},
         )
 
-        matching_dates: list[str] = []
+        dates: set[str] = set()
 
         for country in data.get("results", []):
             if country.get("iso_3166_1") != self.region:
@@ -438,14 +451,9 @@ class EntertainmentCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
                 raw_date = release.get("release_date")
                 if raw_date:
-                    matching_dates.append(raw_date[:10])
+                    dates.add(raw_date[:10])
 
-        # TMDB release history can occasionally be incomplete. Keeping the
-        # discover result is safer than silently hiding a legitimate release.
-        if not matching_dates:
-            return True
-
-        return candidate_date == min(matching_dates)
+        return sorted(dates)
 
     async def _discover_tv(
         self,
