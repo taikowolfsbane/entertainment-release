@@ -60,9 +60,9 @@
       },
       "tv": {
         "title": "Configure TV Shows",
-        "description": "Choose which shows should appear in the TV sensor. Filter by country, streaming services, genres, show type, language, ratings, runtime, and TMDB keywords you want excluded.",
+        "description": "Choose shows by watch region, origin countries, streaming services, availability type, genres, show type, language, ratings, runtime, and excluded TMDB keywords.",
         "data": {
-          "tv_country": "Country",
+          "tv_country": "Watch Region",
           "tv_days": "Days",
           "tv_providers": "Streaming services",
           "tv_genres": "Genres",
@@ -72,10 +72,15 @@
           "tv_min_votes": "Minimum user votes",
           "tv_runtime_min": "Minimum runtime (minutes)",
           "tv_runtime_max": "Maximum runtime (minutes; 0 = no maximum)",
-          "tv_excluded_keywords": "Exclude Keywords"
+          "tv_excluded_keywords": "Exclude Keywords",
+          "tv_origin_countries": "Origin Countries",
+          "tv_monetization_types": "Availability Types"
         },
         "data_description": {
-          "tv_excluded_keywords": "Enter TMDB keyword names separated by commas. Example: Cooking, late-night show. A show is excluded if it matches any of them."
+          "tv_excluded_keywords": "Enter TMDB keyword names separated by commas. Example: Cooking, late-night show. A show is excluded if it matches any of them.",
+          "tv_country": "Country used for streaming-provider availability. TMDB supports one watch region per request.",
+          "tv_origin_countries": "Include shows originating from any selected country. For example, select United States and United Kingdom to include both U.S. and British shows. Leave empty to allow all origins.",
+          "tv_monetization_types": "Choose how a show may be available in the selected watch region. Multiple selections use OR logic."
         }
       },
       "general": {

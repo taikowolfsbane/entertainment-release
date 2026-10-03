@@ -415,9 +415,26 @@ class EntertainmentCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         ]
 
     async def _discover_tv(self, start: str, end: str) -> list[dict[str, Any]]:
-        country = self.options.get(CONF_TV_COUNTRY, DEFAULT_TV_COUNTRY)
+        watch_region = self.options.get(
+            CONF_TV_COUNTRY,
+            DEFAULT_TV_COUNTRY,
+        )
+        origin_countries = [
+            str(v)
+            for v in self.options.get(
+                CONF_TV_ORIGIN_COUNTRIES,
+                DEFAULT_TV_ORIGIN_COUNTRIES,
+            )
+        ]
         genres = [str(v) for v in self.options.get(CONF_TV_GENRES, DEFAULT_TV_GENRES)]
         providers = [str(v) for v in self.options.get(CONF_TV_PROVIDERS, DEFAULT_TV_PROVIDERS)]
+        monetization_types = [
+            str(v)
+            for v in self.options.get(
+                CONF_TV_MONETIZATION_TYPES,
+                DEFAULT_TV_MONETIZATION_TYPES,
+            )
+        ]
         tv_types = [str(v) for v in self.options.get(CONF_TV_TYPES, DEFAULT_TV_TYPES)]
         excluded_keyword_ids = [
             str(v)
@@ -434,8 +451,7 @@ class EntertainmentCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "air_date.gte": start,
             "air_date.lte": end,
             "sort_by": "popularity.desc",
-            "watch_region": country,
-            "with_origin_country": country,
+            "watch_region": watch_region,
         }
 
         if genres:
@@ -473,7 +489,11 @@ class EntertainmentCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         if providers:
             params["with_watch_providers"] = "|".join(providers)
-            params["with_watch_monetization_types"] = "flatrate"
+
+        if monetization_types:
+            params["with_watch_monetization_types"] = "|".join(
+                monetization_types
+            )
 
         if tv_types:
             params["with_type"] = "|".join(tv_types)
@@ -485,7 +505,35 @@ class EntertainmentCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 excluded_keyword_ids
             )
 
-        results = await self._request_all_pages("/discover/tv", params)
+        if origin_countries:
+            merged: dict[int, dict[str, Any]] = {}
+
+            # TMDB's with_origin_country is a single string parameter rather
+            # than a documented OR-list filter. Run one otherwise-identical
+            # Discover request per selected origin country and merge by ID.
+            for origin_country in origin_countries:
+                country_params = dict(params)
+                country_params["with_origin_country"] = origin_country
+
+                country_results = await self._request_all_pages(
+                    "/discover/tv",
+                    country_params,
+                )
+
+                for item in country_results:
+                    show_id = item.get("id")
+                    if show_id is not None:
+                        merged[int(show_id)] = item
+
+            results = list(merged.values())
+            results.sort(
+                key=lambda item: -float(item.get("popularity") or 0)
+            )
+        else:
+            results = await self._request_all_pages(
+                "/discover/tv",
+                params,
+            )
 
         return [
             {

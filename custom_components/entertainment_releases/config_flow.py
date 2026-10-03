@@ -226,8 +226,22 @@ class EntertainmentReleasesOptionsFlow(OptionsFlowWithReload):
             step_id="tv",
             data_schema=vol.Schema({
                 vol.Required(CONF_TV_COUNTRY, default=country): vol.In(self._countries),
+                vol.Optional(
+                    CONF_TV_ORIGIN_COUNTRIES,
+                    default=self._current(
+                        CONF_TV_ORIGIN_COUNTRIES,
+                        DEFAULT_TV_ORIGIN_COUNTRIES,
+                    ),
+                ): cv.multi_select(self._countries),
                 vol.Required(CONF_TV_DAYS, default=self._current(CONF_TV_DAYS, DEFAULT_TV_DAYS)): _number_box(1, 30),
                 vol.Optional(CONF_TV_PROVIDERS, default=provider_defaults): cv.multi_select(providers),
+                vol.Optional(
+                    CONF_TV_MONETIZATION_TYPES,
+                    default=self._current(
+                        CONF_TV_MONETIZATION_TYPES,
+                        DEFAULT_TV_MONETIZATION_TYPES,
+                    ),
+                ): cv.multi_select(WATCH_MONETIZATION_TYPES),
                 vol.Optional(CONF_TV_GENRES, default=self._current(CONF_TV_GENRES, DEFAULT_TV_GENRES)): cv.multi_select(self._tv_genres),
                 vol.Optional(
                     CONF_TV_EXCLUDED_KEYWORDS,

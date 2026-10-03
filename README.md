@@ -2,21 +2,23 @@
 
 A custom Home Assistant integration for tracking upcoming movie and TV releases using data from [The Movie Database (TMDB)](https://www.themoviedb.org/).
 
-Entertainment Releases is designed to turn TMDB's Discover data into useful Home Assistant sensors that can be displayed in dashboards, Markdown cards, automations, and other Home Assistant views.
+Entertainment Releases turns TMDB Discover data into useful Home Assistant sensors that can be displayed in dashboards, Markdown cards, automations, and other Home Assistant views.
 
 The integration currently supports:
 
 - Upcoming theatrical movie releases
 - Upcoming digital movie releases
 - TV shows airing within a configurable date range
-- Region/country filtering
+- Country and region filtering
 - Release-type filtering
 - Genre filtering
-- Certification filtering
+- Multi-certification filtering
 - Language filtering
 - Minimum user score and vote-count filters
 - Runtime filtering
 - Streaming-service filtering for TV
+- Configurable watch-availability types for TV
+- Multiple TV origin countries
 - TV show-type filtering
 - TV keyword exclusions
 - Optional theatrical re-release filtering
@@ -215,9 +217,11 @@ The TV configuration page controls the shows shown in the TV sensor.
 
 Available filters include:
 
-- **Country**
+- **Watch Region**
+- **Origin Countries**
 - **Days**
 - **Streaming Services**
+- **Availability Types**
 - **Genres**
 - **Show Types**
 - **Original Language**
@@ -227,9 +231,38 @@ Available filters include:
 - **Maximum Runtime**
 - **Exclude Keywords**
 
+### Watch Region
+
+**Watch Region** controls where TMDB checks streaming-provider availability.
+
+This is a single selection.
+
+Example:
+
+`United States`
+
+If you live in the U.S. and want to know where a show can be watched in the U.S., keep the watch region set to United States even if the show itself originated in another country.
+
+### Origin Countries
+
+**Origin Countries** controls where the show itself originated.
+
+This is a multi-select.
+
+For example:
+
+- United States
+- United Kingdom
+
+allows both U.S. and British shows to appear while still using **United States** as the watch region.
+
+This is useful for shows such as British productions that are available on U.S. streaming services.
+
+Leaving Origin Countries empty removes the origin-country restriction.
+
 ### Streaming Services
 
-Entertainment Releases uses TMDB's watch-provider data to narrow TV results to selected subscription streaming services.
+Entertainment Releases uses TMDB's watch-provider data to narrow TV results to selected services.
 
 Common U.S. providers include:
 
@@ -247,6 +280,26 @@ Multiple selected providers use OR logic.
 For example:
 
 `Netflix OR Hulu OR Max`
+
+### Availability Types
+
+TV results can also be filtered by how a show is available in the selected watch region.
+
+Available options are:
+
+- **Subscription**
+- **Free**
+- **Ads**
+- **Rent**
+- **Buy**
+
+Multiple selections use OR logic.
+
+For example:
+
+`Subscription OR Rent OR Buy`
+
+The default is **Subscription**.
 
 ### Show Types
 
@@ -273,7 +326,7 @@ The TV page includes an **Exclude Keywords** field.
 
 Enter comma-separated TMDB keyword names, for example:
 
-`Cooking, late-night show`
+`Cooking, late-night show, concert`
 
 When the configuration is saved, Entertainment Releases resolves those names through TMDB's keyword search endpoint and applies the resulting IDs through TMDB's native `without_keywords` filter.
 
@@ -440,12 +493,19 @@ Examples include:
 - `vote_count.gte`
 - `with_runtime.gte`
 - `with_runtime.lte`
+- `watch_region`
+- `with_origin_country`
 - `with_watch_providers`
 - `with_watch_monetization_types`
 - `with_type`
 - `without_keywords`
 
-This makes the integration's behavior much closer to the filters available through TMDB itself.
+Where TMDB does not provide native OR behavior for a field used as a single value, Entertainment Releases may run multiple otherwise-identical requests and merge/deduplicate the results.
+
+Examples include:
+
+- Multiple movie certifications
+- Multiple TV origin countries
 
 ---
 
@@ -483,11 +543,34 @@ Possible causes include:
 - The certification does not match.
 - **Exclude Theatrical Re-releases** filtered it out.
 
+## A TV show is missing
+
+Check:
+
+- Watch Region
+- Origin Countries
+- Streaming Services
+- Availability Types
+- Genres
+- Show Types
+- Original Language
+- Minimum User Score
+- Minimum User Votes
+- Runtime
+- Exclude Keywords
+- Whether TMDB lists an episode airing inside the configured date window
+
+Remember that **Watch Region** and **Origin Countries** are different:
+
+- Watch Region = where you want to watch the show
+- Origin Countries = where the show was produced/originated
+
 ## Too many TV shows are appearing
 
 Try narrowing the TV configuration using:
 
 - Streaming services
+- Availability types
 - Show types
 - Genres
 - Original language
@@ -496,7 +579,7 @@ Try narrowing the TV configuration using:
 
 For example:
 
-`Cooking, late-night show`
+`Cooking, late-night show, concert`
 
 can remove unwanted programming that still matches the other TV filters.
 

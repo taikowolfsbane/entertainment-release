@@ -29,6 +29,8 @@ CONF_DIGITAL_RUNTIME_MIN = "digital_runtime_min"
 CONF_DIGITAL_RUNTIME_MAX = "digital_runtime_max"
 
 CONF_TV_COUNTRY = "tv_country"
+CONF_TV_ORIGIN_COUNTRIES = "tv_origin_countries"
+CONF_TV_MONETIZATION_TYPES = "tv_monetization_types"
 CONF_TV_DAYS = "tv_days"
 CONF_TV_GENRES = "tv_genres"
 CONF_TV_LANGUAGE = "tv_language"
@@ -69,6 +71,8 @@ DEFAULT_DIGITAL_RUNTIME_MIN = 0
 DEFAULT_DIGITAL_RUNTIME_MAX = 0
 
 DEFAULT_TV_COUNTRY = "US"
+DEFAULT_TV_ORIGIN_COUNTRIES = ["US"]
+DEFAULT_TV_MONETIZATION_TYPES = ["flatrate"]
 DEFAULT_TV_DAYS = 1
 DEFAULT_TV_GENRES = []
 DEFAULT_TV_LANGUAGE = "en"
@@ -93,6 +97,14 @@ RELEASE_TYPES = {
     "4": "Digital",
     "5": "Physical",
     "6": "TV",
+}
+
+WATCH_MONETIZATION_TYPES = {
+    "flatrate": "Subscription",
+    "free": "Free",
+    "ads": "Ads",
+    "rent": "Rent",
+    "buy": "Buy",
 }
 
 TV_TYPES = {
