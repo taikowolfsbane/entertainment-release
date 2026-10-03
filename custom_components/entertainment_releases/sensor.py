@@ -72,7 +72,7 @@ class EntertainmentSensor(
         self._attr_name = name
         self._attr_icon = icon
 
-        # Keep v0.1.0 unique IDs so upgrades retain existing entities.
+        # Preserve existing entity-registry entries during upgrades.
         self._attr_unique_id = f"{DOMAIN}_{data_key}"
 
     @property
@@ -90,12 +90,37 @@ class EntertainmentSensor(
         """Return release data and configured window."""
         data = self.coordinator.data or {}
 
-        return {
+        attributes: dict[str, Any] = {
             "date": data.get("date"),
             "region": data.get("region"),
             "lookahead_days": data.get(self._days_key),
             "items": data.get(self._data_key, []),
         }
+
+        if self._data_key in ("theatrical", "digital"):
+            attributes["original_language"] = data.get(
+                "movie_language"
+            )
+
+        if self._data_key == "theatrical":
+            attributes["minimum_user_score"] = data.get(
+                "movie_min_score"
+            )
+
+        if self._data_key == "tv":
+            attributes["original_language"] = data.get(
+                "tv_language"
+            )
+            attributes["selected_provider_ids"] = data.get(
+                "tv_providers",
+                [],
+            )
+            attributes["selected_genre_ids"] = data.get(
+                "tv_genres",
+                [],
+            )
+
+        return attributes
 
     @property
     def device_info(self) -> DeviceInfo:
